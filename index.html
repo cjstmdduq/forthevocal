@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>포더보컬 - 발성 시각화 도구</title>
+  <style>
+    :root {
+      --primary-color: #4e54c8;
+      --secondary-color: #8f94fb;
+      --accent-color: #ff6b6b;
+      --background-color: #f9f9f9;
+      --panel-color: #ffffff;
+      --text-color: #333333;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    header {
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      display: flex;
+      width: 100%;
+      max-width: 1200px;
+      gap: 20px;
+    }
+
+    .tools-panel {
+      flex: 0 0 300px;
+      background: var(--panel-color);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .tool-section {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 15px;
+    }
+
+    .tool-section:last-child {
+      border-bottom: none;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title i {
+      font-size: 1.4rem;
+    }
+
+    .drawing-tools {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .tool-btn {
+      padding: 8px;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background: #f0f0f0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .tool-btn i {
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+    }
+
+    .tool-btn:hover {
+      background: #e8e8e8;
+    }
+
+    .tool-btn.active {
+      border-color: var(--primary-color);
+      background: rgba(78, 84, 200, 0.1);
+    }
+
+    .color-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .color-option {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #eee;
+      transition: transform 0.2s;
+    }
+
+    .color-option:hover {
+      transform: scale(1.15);
+    }
+
+    .color-option.active {
+      border: 2px solid #333;
+      transform: scale(1.15);
+    }
+
+    .slider-control {
+      margin: 15px 0;
+    }
+
+    .slider-control label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .slider-container input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: #ddd;
+      outline: none;
+    }
+
+    .slider-container input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      cursor: pointer;
+    }
+
+    .slider-value {
+      font-weight: 500;
+      min-width: 30px;
+      text-align: center;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: #f9f9f9;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .vocal-element {
+      margin-top: 10px;
+    }
+
+    .vocal-element label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .canvas-container {
+      flex: 1;
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .situation-display {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      z-index: 100;
+      max-width: 80%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    #vocalCanvas {
+      display: block;
+      background: white;
+      cursor: crosshair;
+      width: 100%;
+      height: 100%;
+    }
+
+    .action-bar {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #e9ecef;
+      color: #212529;
+    }
+
+    .btn-danger {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    .memo-container {
+      margin-top: 10px;
+    }
+
+    .memo-container textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+    }
+
+    /* 모바일 반응형 */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+      
+      .tools-panel {
+        flex: none;
+        width: 100%;
+      }
+      
+      .canvas-container {
+        height: 500px;
+      }
+    }
+
+    /* 아이콘 스타일 */
+    .material-icons {
+      font-family: 'Material Icons';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+  <!-- 구글 폰트 및 아이콘 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <h1>🎵 포더보컬: 발성 시각화 도구</h1>
+    <p class="subtitle">발성 연습을 위한 시각적 가이드 에디터</p>
+  </header>
+
+  <div class="container">
+    <div class="tools-panel">
+      <div class="tool-section">
+        <div class="section-title">
+          <i class="material-icons">brush</i>
+          <span>그리기 도구</span>
+        </div>
+        <div class="drawing-tools">
+          <button class="tool-btn active" id="pencil-tool">
+            <i class="material-icons">edit</i>
+            <span>연필</span>
+          </button>
+          <button class="tool-btn" id="line-tool">
+            <i class="material-icons">show_chart</i>
+            <span>직선</span>
+          </button>
+          <button class="tool-btn" id="curve-tool">
+            <i class="material-icons">timeline</i>
+            <span>곡선</span>
+          </button>
+          <button class="tool-btn" id="arrow-tool">
+            <i class="material-icons">arrow_forward</i>
+            <span>화살표</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="tool-section">
+        <div class="section-title">
+          <i class="material-icons">palette</i>
+          <span>색상 및 스타일</span>
+        </div>
+        <div class="color-picker">
+          <div class="color-option active" style="background-color: #ff6b6b;" data-color="#ff6b6b"></div>
+          <div class="color-option" style="background-color: #4e54c8;" data-color="#4e54c8"></div>
+          <div class="color-option" style="background-color: #38d9a9;" data-color="#38d9a9"></div>
+          <div class="color-option" style="background-color: #ffd43b;" data-color="#ffd43b"></div>
+          <div class="color-option" style="background-color: #ff8787;" data-color="#ff8787"></div>
+          <div class="color-option" style="background-color: #7048e8;" data-color="#7048e8"></div>
+          <div class="color-option" style="background-color: #000000;" data-color="#000000"></div>
+          <div class="color-option" style="background-color: #868e96;" data-color="#868e96"></div>
+        </div>
+
+        <div class="slider-control">
+          <label>선 굵기</label>
+          <div class="slider-container">
+            <input type="range" id="line-width" min="1" max="20" value="3">
+            <span class="slider-value" id="line-width-value">3px</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-section">
+        <div class="section-title">
+          <i class="material-icons">category</i>
+          <span>발성 요소</span>
+        </div>
+        
+        <div class="vocal-element">
+          <label for="vocal-type">발성 유형</label>
+          <select id="vocal-type">
+            <option value="default">일반</option>
+            <option value="strength">근력 방향</option>
+            <option value="sound">소리 방향</option>
+            <option value="image">이미지 방향</option>
+          </select>
+        </div>
+
+        <div class="vocal-element">
+          <label for="background-image">배경 이미지</label>
+          <select id="background-image">
+            <option value="none">없음</option>
+            <option value="human_vocal">인체 발성기관</option>
+            <option value="wave">음파 패턴</option>
+            <option value="notes">음표</option>
+          </select>
+        </div>
+        
+        <div class="vocal-element">
+          <label for="situation-title">상황 명칭</label>
+          <input type="text" id="situation-title" placeholder="상황 명칭 입력 (예: 가성 연습 1)" />
+        </div>
+
+        <div class="memo-container">
+          <label for="memo">메모</label>
+          <textarea id="memo" placeholder="발성 연습 메모를 여기에 작성하세요..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-container">
+      <div class="situation-display" id="situation-display"></div>
+      <canvas id="vocalCanvas" width="800" height="600"></canvas>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <button class="btn btn-danger" id="clear-btn">
+      <i class="material-icons">delete</i>
+      <span>지우기</span>
+    </button>
+    <button class="btn btn-secondary" id="undo-btn">
+      <i class="material-icons">undo</i>
+      <span>실행취소</span>
+    </button>
+    <button class="btn btn-secondary" id="download-img-btn">
+      <i class="material-icons">image</i>
+      <span>이미지 다운로드</span>
+    </button>
+    <button class="btn btn-primary" id="save-btn">
+      <i class="material-icons">save</i>
+      <span>저장하기</span>
+    </button>
+  </div>
+
+  <script>
+    // 캔버스 및 컨텍스트 가져오기
+    const canvas = document.getElementById('vocalCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // 캔버스 크기 설정
+    function resizeCanvas() {
+      const container = document.querySelector('.canvas-container');
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      redrawCanvas();
+    }
+
+    // 이미지 배경
+    const backgroundImages = {
+      none: null,
+      human_vocal: 'human_vocal.png', 
+      wave: 'human_vocal.png', // 추후 wave_pattern.png로 변경
+      notes: 'human_vocal.png' // 추후 music_notes.png로 변경
+    };
+    
+    // 배경 이미지 객체
+    const bgImg = new Image();
+    
+    // 상태 변수
+    let isDrawing = false;
+    let currentTool = 'pencil-tool';
+    let currentColor = '#ff6b6b';
+    let currentLineWidth = 3;
+    let currentVocalType = 'default';
+    let currentBackground = 'none';
+    let currentSituation = '';
+    let startX, startY;
+    let points = []; // 곡선을 위한 점들
+    let drawingHistory = [];
+    let currentDrawingState = null;
+    
+    // 초기화 함수
+    function init() {
+      resizeCanvas();
+      
+      // 툴 버튼 이벤트 리스너
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelector('.tool-btn.active').classList.remove('active');
+          this.classList.add('active');
+          currentTool = this.id;
+        });
+      });
+      
+      // 색상 선택 이벤트 리스너
+      document.querySelectorAll('.color-option').forEach(color => {
+        color.addEventListener('click', function() {
+          document.querySelector('.color-option.active').classList.remove('active');
+          this.classList.add('active');
+          currentColor = this.dataset.color;
+        });
+      });
+      
+      // 선 굵기 이벤트 리스너
+      const lineWidthSlider = document.getElementById('line-width');
+      const lineWidthValue = document.getElementById('line-width-value');
+      
+      lineWidthSlider.addEventListener('input', function() {
+        currentLineWidth = this.value;
+        lineWidthValue.textContent = `${this.value}px`;
+      });
+      
+      // 발성 유형 이벤트 리스너
+      document.getElementById('vocal-type').addEventListener('change', function() {
+        currentVocalType = this.value;
+      });
+      
+      // 배경 이미지 이벤트 리스너
+      document.getElementById('background-image').addEventListener('change', function() {
+        currentBackground = this.value;
+        if (backgroundImages[currentBackground]) {
+          bgImg.src = backgroundImages[currentBackground];
+          bgImg.onload = function() {
+            redrawCanvas();
+          };
+        } else {
+          redrawCanvas();
+        }
+      });
+      
+      // 상황 명칭 이벤트 리스너
+      document.getElementById('situation-title').addEventListener('input', function() {
+        currentSituation = this.value;
+        updateSituationDisplay();
+      });
+      
+      // 버튼 이벤트 리스너
+      document.getElementById('clear-btn').addEventListener('click', clearCanvas);
+      document.getElementById('undo-btn').addEventListener('click', undoLastAction);
+      document.getElementById('save-btn').addEventListener('click', saveCanvas);
+      document.getElementById('download-img-btn').addEventListener('click', downloadCanvasImage);
+      
+      // 캔버스 이벤트 리스너
+      canvas.addEventListener('mousedown', handleMouseDown);
+      canvas.addEventListener('mousemove', handleMouseMove);
+      canvas.addEventListener('mouseup', handleMouseUp);
+      canvas.addEventListener('mouseout', handleMouseOut);
+      
+      // 터치 이벤트 지원
+      canvas.addEventListener('touchstart', handleTouchStart);
+      canvas.addEventListener('touchmove', handleTouchMove);
+      canvas.addEventListener('touchend', handleTouchEnd);
+      
+      // 윈도우 리사이즈 이벤트
+      window.addEventListener('resize', resizeCanvas);
+      
+      // 초기 캔버스 설정
+      clearCanvas();
+    }
+    
+    // 캔버스 다시 그리기
+    function redrawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // 배경 이미지 그리기 - 비율 유지
+      if (backgroundImages[currentBackground] && bgImg.complete) {
+        const imgRatio = bgImg.width / bgImg.height;
+        const canvasRatio = canvas.width / canvas.height;
+        
+        let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
+        
+        if (imgRatio > canvasRatio) {
+          // 이미지가 캔버스보다 더 가로로 긴 경우
+          drawHeight = canvas.height;
+          drawWidth = drawHeight * imgRatio;
+          offsetX = (canvas.width - drawWidth) / 2;
+        } else {
+          // 이미지가 캔버스보다 더 세로로 긴 경우
+          drawWidth = canvas.width;
+          drawHeight = drawWidth / imgRatio;
+          offsetY = (canvas.height - drawHeight) / 2;
+        }
+        
+        ctx.drawImage(bgImg, offsetX, offsetY, drawWidth, drawHeight);
+      }
+      
+      // 그리기 히스토리 다시 그리기
+      drawingHistory.forEach(state => {
+        drawFromState(state);
+      });
+      
+      // 상황 명칭 표시 업데이트
+      updateSituationDisplay();
+    }
+    
+    // 상황 명칭 표시 업데이트
+    function updateSituationDisplay() {
+      const situationDisplay = document.getElementById('situation-display');
+      if (currentSituation) {
+        situationDisplay.textContent = currentSituation;
+        situationDisplay.style.display = 'block';
+      } else {
+        situationDisplay.style.display = 'none';
+      }
+    }
+    
+    // 상태에서 그리기
+    function drawFromState(state) {
+      const { type, color, lineWidth, vocalType, points, memo } = state;
+      
+      // 흰색 테두리를 위한 설정
+      function drawWithWhiteOutline(drawFunction) {
+        // 먼저 흰색 테두리 그리기
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = lineWidth + 2; // 테두리 굵기 감소
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        drawFunction();
+        
+        // 그 위에 실제 색상으로 그리기
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lineWidth;
+        drawFunction();
+      }
+      
+      switch (type) {
+        case 'pencil-tool':
+          drawWithWhiteOutline(() => {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            
+            for (let i = 1; i < points.length; i++) {
+              ctx.lineTo(points[i].x, points[i].y);
+            }
+            
+            ctx.stroke();
+          });
+          break;
+          
+        case 'line-tool':
+          drawWithWhiteOutline(() => {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            ctx.lineTo(points[1].x, points[1].y);
+            ctx.stroke();
+          });
+          break;
+          
+        case 'curve-tool':
+          drawWithWhiteOutline(() => {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            
+            for (let i = 1; i < points.length - 2; i++) {
+              const xc = (points[i].x + points[i + 1].x) / 2;
+              const yc = (points[i].y + points[i + 1].y) / 2;
+              ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+            }
+            
+            if (points.length > 2) {
+              ctx.quadraticCurveTo(
+                points[points.length - 2].x,
+                points[points.length - 2].y,
+                points[points.length - 1].x,
+                points[points.length - 1].y
+              );
+            }
+            
+            ctx.stroke();
+          });
+          break;
+          
+        case 'arrow-tool':
+          drawArrowWithOutline(points[0].x, points[0].y, points[1].x, points[1].y, color, lineWidth);
+          break;
+      }
+      
+      // 메모 그리기
+      if (memo) {
+        const lastPoint = points[points.length - 1];
+        // 메모 텍스트에 흰색 테두리 추가
+        ctx.font = 'bold 14px Noto Sans KR';
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.strokeText(memo, lastPoint.x + 10, lastPoint.y + 10);
+        ctx.fillStyle = '#000';
+        ctx.fillText(memo, lastPoint.x + 10, lastPoint.y + 10);
+      }
+      
+      // 발성 유형 마커 그리기
+      if (vocalType !== 'default') {
+        drawVocalTypeMarker(points[points.length - 1].x, points[points.length - 1].y, vocalType);
+      }
+    }
+    
+    // 발성 유형 마커 그리기
+    function drawVocalTypeMarker(x, y, type) {
+      ctx.save();
+      
+      switch (type) {
+        case 'strength':
+          // 근력 방향 - 삼각형 모양
+          // 흰색 테두리 그리기
+          ctx.beginPath();
+          ctx.moveTo(x + 15, y);
+          ctx.lineTo(x, y - 10);
+          ctx.lineTo(x, y + 10);
+          ctx.closePath();
+          ctx.strokeStyle = 'white';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          
+          // 실제 색상 그리기
+          ctx.fillStyle = '#ff6b6b';
+          ctx.fill();
+          break;
+          
+        case 'sound':
+          // 소리 방향 - 원 모양
+          // 흰색 테두리 그리기
+          ctx.beginPath();
+          ctx.arc(x + 15, y, 8, 0, Math.PI * 2);
+          ctx.strokeStyle = 'white';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          
+          // 실제 색상 그리기
+          ctx.fillStyle = '#4e54c8';
+          ctx.fill();
+          break;
+          
+        case 'image':
+          // 이미지 방향 - 별 모양
+          const spikes = 5;
+          const outerRadius = 10;
+          const innerRadius = 5;
+          
+          // 흰색 테두리 그리기
+          ctx.beginPath();
+          for (let i = 0; i < spikes * 2; i++) {
+            const radius = i % 2 === 0 ? outerRadius + 2 : innerRadius + 2;
+            const angle = Math.PI / spikes * i;
+            ctx.lineTo(
+              x + 15 + Math.cos(angle) * radius,
+              y + Math.sin(angle) * radius
+            );
+          }
+          ctx.closePath();
+          ctx.strokeStyle = 'white';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          
+          // 실제 색상 그리기
+          ctx.beginPath();
+          for (let i = 0; i < spikes * 2; i++) {
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            const angle = Math.PI / spikes * i;
+            ctx.lineTo(
+              x + 15 + Math.cos(angle) * radius,
+              y + Math.sin(angle) * radius
+            );
+          }
+          ctx.closePath();
+          ctx.fillStyle = '#38d9a9';
+          ctx.fill();
+          break;
+      }
+      
+      ctx.restore();
+    }
+    
+    // 화살표 그리기 - 테두리 없음
+    function drawArrow(fromX, fromY, toX, toY, color, width) {
+      // 화살표 크기를 선 굵기에 비례하게 조정
+      const headLength = Math.max(12, width * 5);
+      const headWidth = Math.max(8, width * 3);
+      const angle = Math.atan2(toY - fromY, toX - fromX);
+      
+      // 선 그리기
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.stroke();
+      
+      // 화살표 머리 그리기
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(
+        toX - headLength * Math.cos(angle - Math.PI / headWidth),
+        toY - headLength * Math.sin(angle - Math.PI / headWidth)
+      );
+      ctx.lineTo(
+        toX - headLength * Math.cos(angle + Math.PI / headWidth),
+        toY - headLength * Math.sin(angle + Math.PI / headWidth)
+      );
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+    
+    // 화살표 그리기 - 흰색 테두리 추가
+    function drawArrowWithOutline(fromX, fromY, toX, toY, color, width) {
+      // 화살표 크기를 선 굵기에 비례하게 조정
+      const headLength = Math.max(12, width * 5);
+      const headWidth = Math.max(8, width * 3);
+      const angle = Math.atan2(toY - fromY, toX - fromX);
+      
+      // 흰색 테두리 선 그리기
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = width + 2; // 테두리 굵기 감소
+      ctx.stroke();
+      
+      // 실제 색상 선 그리기
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.stroke();
+      
+      // 흰색 테두리 화살표 머리 그리기
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(
+        toX - (headLength + 2) * Math.cos(angle - Math.PI / headWidth),
+        toY - (headLength + 2) * Math.sin(angle - Math.PI / headWidth)
+      );
+      ctx.lineTo(
+        toX - (headLength + 2) * Math.cos(angle + Math.PI / headWidth),
+        toY - (headLength + 2) * Math.sin(angle + Math.PI / headWidth)
+      );
+      ctx.closePath();
+      ctx.fillStyle = 'white';
+      ctx.fill();
+      
+      // 실제 색상 화살표 머리 그리기
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(
+        toX - headLength * Math.cos(angle - Math.PI / headWidth),
+        toY - headLength * Math.sin(angle - Math.PI / headWidth)
+      );
+      ctx.lineTo(
+        toX - headLength * Math.cos(angle + Math.PI / headWidth),
+        toY - headLength * Math.sin(angle + Math.PI / headWidth)
+      );
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+    
+    // 마우스 이벤트 핸들러
+    function handleMouseDown(e) {
+      isDrawing = true;
+      startX = e.offsetX;
+      startY = e.offsetY;
+      
+      points = [];
+      points.push({ x: startX, y: startY });
+      
+      // 현재 그리기 상태 설정
+      currentDrawingState = {
+        type: currentTool,
+        color: currentColor,
+        lineWidth: currentLineWidth,
+        vocalType: currentVocalType,
+        points: points,
+        memo: document.getElementById('memo').value
+      };
+      
+      if (currentTool === 'pencil-tool' || currentTool === 'curve-tool') {
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = currentLineWidth;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+      }
+    }
+    
+    function handleMouseMove(e) {
+      if (!isDrawing) return;
+      
+      const x = e.offsetX;
+      const y = e.offsetY;
+      
+      if (currentTool === 'pencil-tool') {
+        // 먼저 흰색 테두리 그리기
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = currentLineWidth + 2;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        
+        // 실제 색상으로 그리기
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = currentLineWidth;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        
+        points.push({ x, y });
+      } else if (currentTool === 'curve-tool') {
+        points.push({ x, y });
+        
+        // 일시적으로 곡선 그리기
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        redrawCanvas();
+        
+        // 흰색 테두리 곡선 그리기
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        
+        for (let i = 1; i < points.length - 2; i++) {
+          const xc = (points[i].x + points[i + 1].x) / 2;
+          const yc = (points[i].y + points[i + 1].y) / 2;
+          ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+        }
+        
+        if (points.length > 2) {
+          ctx.quadraticCurveTo(
+            points[points.length - 2].x,
+            points[points.length - 2].y,
+            points[points.length - 1].x,
+            points[points.length - 1].y
+          );
+        }
+        
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = currentLineWidth + 2;
+        ctx.stroke();
+        
+        // 실제 색상 곡선 그리기
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        
+        for (let i = 1; i < points.length - 2; i++) {
+          const xc = (points[i].x + points[i + 1].x) / 2;
+          const yc = (points[i].y + points[i + 1].y) / 2;
+          ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+        }
+        
+        if (points.length > 2) {
+          ctx.quadraticCurveTo(
+            points[points.length - 2].x,
+            points[points.length - 2].y,
+            points[points.length - 1].x,
+            points[points.length - 1].y
+          );
+        }
+        
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = currentLineWidth;
+        ctx.stroke();
+      } else {
+        // 일시적으로 미리보기 그리기
+        redrawCanvas();
+        
+        if (currentTool === 'line-tool') {
+          // 흰색 테두리 선 그리기
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(x, y);
+          ctx.strokeStyle = 'white';
+          ctx.lineWidth = currentLineWidth + 2;
+          ctx.stroke();
+          
+          // 실제 색상 선 그리기
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(x, y);
+          ctx.strokeStyle = currentColor;
+          ctx.lineWidth = currentLineWidth;
+          ctx.stroke();
+        } else if (currentTool === 'arrow-tool') {
+          drawArrowWithOutline(startX, startY, x, y, currentColor, currentLineWidth);
+        }
+      }
+    }
+    
+    function handleMouseUp(e) {
+      if (!isDrawing) return;
+      
+      const x = e.offsetX;
+      const y = e.offsetY;
+      
+      if (currentTool === 'line-tool' || currentTool === 'arrow-tool') {
+        points.push({ x, y });
+      }
+      
+      // 그리기 히스토리에 추가
+      if (currentDrawingState) {
+        drawingHistory.push(currentDrawingState);
+      }
+      
+      isDrawing = false;
+      redrawCanvas();
+    }
+    
+    function handleMouseOut() {
+      if (isDrawing && currentDrawingState) {
+        drawingHistory.push(currentDrawingState);
+      }
+      
+      isDrawing = false;
+      redrawCanvas();
+    }
+    
+    // 터치 이벤트 핸들러
+    function handleTouchStart(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      
+      isDrawing = true;
+      startX = x;
+      startY = y;
+      
+      points = [];
+      points.push({ x, y });
+      
+      currentDrawingState = {
+        type: currentTool,
+        color: currentColor,
+        lineWidth: currentLineWidth,
+        vocalType: currentVocalType,
+        points: points,
+        memo: document.getElementById('memo').value
+      };
+      
+      if (currentTool === 'pencil-tool' || currentTool === 'curve-tool') {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = currentLineWidth;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+      }
+    }
+    
+    function handleTouchMove(e) {
+      e.preventDefault();
+      
+      if (!isDrawing) return;
+      
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      
+      if (currentTool === 'pencil-tool') {
+        // 먼저 흰색 테두리 그리기
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = currentLineWidth + 2;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        
+        // 실제 색상으로 그리기
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = currentLineWidth;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        
+        points.push({ x, y });
+      } else if (currentTool === 'curve-tool') {
+        points.push({ x, y });
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        redrawCanvas();
+        
+        // 흰색 테두리 곡선 그리기
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        
+        for (let i = 1; i < points.length - 2; i++) {
+          const xc = (points[i].x + points[i + 1].x) / 2;
+          const yc = (points[i].y + points[i + 1].y) / 2;
+          ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+        }
+        
+        if (points.length > 2) {
+          ctx.quadraticCurveTo(
+            points[points.length - 2].x,
+            points[points.length - 2].y,
+            points[points.length - 1].x,
+            points[points.length - 1].y
+          );
+        }
+        
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = currentLineWidth + 2;
+        ctx.stroke();
+        
+        // 실제 색상 곡선 그리기
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        
+        for (let i = 1; i < points.length - 2; i++) {
+          const xc = (points[i].x + points[i + 1].x) / 2;
+          const yc = (points[i].y + points[i + 1].y) / 2;
+          ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+        }
+        
+        if (points.length > 2) {
+          ctx.quadraticCurveTo(
+            points[points.length - 2].x,
+            points[points.length - 2].y,
+            points[points.length - 1].x,
+            points[points.length - 1].y
+          );
+        }
+        
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = currentLineWidth;
+        ctx.stroke();
+      } else {
+        redrawCanvas();
+        
+        if (currentTool === 'line-tool') {
+          // 흰색 테두리 선 그리기
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(x, y);
+          ctx.strokeStyle = 'white';
+          ctx.lineWidth = currentLineWidth + 2;
+          ctx.stroke();
+          
+          // 실제 색상 선 그리기
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(x, y);
+          ctx.strokeStyle = currentColor;
+          ctx.lineWidth = currentLineWidth;
+          ctx.stroke();
+        } else if (currentTool === 'arrow-tool') {
+          drawArrowWithOutline(startX, startY, x, y, currentColor, currentLineWidth);
+        }
+      }
+    }
+    
+    function handleTouchEnd(e) {
+      e.preventDefault();
+      
+      if (!isDrawing) return;
+      
+      if (currentTool === 'line-tool' || currentTool === 'arrow-tool') {
+        const lastTouch = e.changedTouches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = lastTouch.clientX - rect.left;
+        const y = lastTouch.clientY - rect.top;
+        
+        points.push({ x, y });
+      }
+      
+      if (currentDrawingState) {
+        drawingHistory.push(currentDrawingState);
+      }
+      
+      isDrawing = false;
+      redrawCanvas();
+    }
+    
+    // 캔버스 지우기
+    function clearCanvas() {
+      drawingHistory = [];
+      redrawCanvas();
+    }
+    
+    // 실행 취소
+    function undoLastAction() {
+      if (drawingHistory.length > 0) {
+        drawingHistory.pop();
+        redrawCanvas();
+      }
+    }
+    
+    // 캔버스 저장
+    function saveCanvas() {
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      
+      link.href = dataUrl;
+      link.download = `포더보컬_${new Date().toISOString().slice(0, 10)}.png`;
+      link.click();
+    }
+    
+    // 이미지만 다운로드
+    function downloadCanvasImage() {
+      // 이미지 다운로드를 위한 임시 캔버스 생성
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      // 배경 이미지 그리기 - 비율 유지
+      if (backgroundImages[currentBackground] && bgImg.complete) {
+        const imgRatio = bgImg.width / bgImg.height;
+        const canvasRatio = tempCanvas.width / tempCanvas.height;
+        
+        let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
+        
+        if (imgRatio > canvasRatio) {
+          drawHeight = tempCanvas.height;
+          drawWidth = drawHeight * imgRatio;
+          offsetX = (tempCanvas.width - drawWidth) / 2;
+        } else {
+          drawWidth = tempCanvas.width;
+          drawHeight = drawWidth / imgRatio;
+          offsetY = (tempCanvas.height - drawHeight) / 2;
+        }
+        
+        tempCtx.drawImage(bgImg, offsetX, offsetY, drawWidth, drawHeight);
+      } else {
+        // 배경이 없으면 흰색 배경
+        tempCtx.fillStyle = 'white';
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+      }
+      
+      // 그리기 히스토리 다시 그리기
+      drawingHistory.forEach(state => {
+        // 임시적으로 그리기 상태를 임시 캔버스에 그리기 위한 기존 컨텍스트 저장
+        const originalContext = ctx;
+        ctx = tempCtx;
+        drawFromState(state);
+        ctx = originalContext;
+      });
+      
+      // 상황 명칭을 캠버스 상단에 그리기
+      if (currentSituation) {
+        tempCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        tempCtx.fillRect(10, 10, tempCtx.measureText(currentSituation).width + 20, 30);
+        tempCtx.font = 'bold 14px Noto Sans KR';
+        tempCtx.fillStyle = 'white';
+        tempCtx.fillText(currentSituation, 20, 30);
+      }
+      
+      // 이미지로 다운로드
+      const imageUrl = tempCanvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      
+      link.href = imageUrl;
+      link.download = `포더보컬_이미지_${new Date().toISOString().slice(0, 10)}.png`;
+      link.click();
+    }
+    
+    // 페이지 로드 시 초기화
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>
