@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>포더보컬 - 발성 시각화 도구</title>
   <style>
     :root {
@@ -39,26 +39,41 @@
       text-align: center;
     }
 
+    /* 애니메이션 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
     h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
+      font-size: 2.8rem;
+      margin-bottom: 15px;
       background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 10px rgba(78, 84, 200, 0.15);
+      animation: fadeIn 0.8s ease-out;
     }
 
     .subtitle {
-      font-size: 1.1rem;
-      color: #666;
-      margin-bottom: 20px;
+      font-size: 1.2rem;
+      color: #555;
+      margin-bottom: 25px;
+      font-weight: 500;
+      opacity: 0.9;
+      animation: fadeIn 0.8s ease-out 0.2s backwards;
     }
 
     .container {
       display: flex;
       width: 100%;
       max-width: 1200px;
-      gap: 20px;
+      gap: 30px;
+      transition: all 0.2s ease;
+      align-items: flex-start;
     }
 
     .tools-panel {
@@ -201,6 +216,14 @@
       font-size: 1rem;
       cursor: pointer;
     }
+    
+    small {
+      display: block;
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 3px;
+      margin-bottom: 8px;
+    }
 
     .vocal-element {
       margin-top: 10px;
@@ -218,8 +241,63 @@
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      aspect-ratio: 1 / 1;
+      width: 100%;
+      max-width: 600px;
+      max-height: 600px;
+      margin: 0 auto;
     }
     
+    /* 모바일에서 캠버스 구체적 조정 */
+    @media (max-width: 768px) {
+      .canvas-container {
+        aspect-ratio: 1/1;
+        width: 100%;
+        max-width: 100%;
+        height: auto !important; /* 높이 강제 적용 */
+        overflow: hidden;
+        margin: 0 auto 20px auto;
+        border-radius: 8px;
+      }
+
+      #vocalCanvas {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain;
+      }
+      
+      /* 상황 명칭 표시 모바일 조정 */
+      .situation-display {
+        font-size: 0.9rem;
+        padding: 5px 10px;
+        top: 5px;
+        right: 5px;
+      }
+      
+      /* 모바일에서 드롭다운 컨트롤 최적화 */
+      select {
+        height: 44px;
+        font-size: 1.1rem;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+        margin-bottom: 10px;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        border-radius: 8px;
+        padding: 0 12px;
+      }
+    }
+    
+    @media (min-width: 1200px) {
+      .canvas-container {
+        aspect-ratio: auto;
+        min-height: 650px;
+      }
+    }
+    
+    /* 상황 명칭 표시 업데이트 - 모바일에서도 잘 보이게 */
     .situation-display {
       position: absolute;
       top: 10px;
@@ -234,14 +312,19 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      font-size: 1rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
     
     #vocalCanvas {
       display: block;
-      background: white;
+      background: #fcfcfc;
       cursor: crosshair;
       width: 100%;
       height: 100%;
+      border-radius: 12px;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
     }
 
     .action-bar {
@@ -288,7 +371,13 @@
     .memo-container {
       margin-top: 10px;
     }
-
+    
+    .memo-container label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    
     .memo-container textarea {
       width: 100%;
       padding: 10px;
@@ -297,21 +386,287 @@
       resize: vertical;
       min-height: 80px;
       font-family: inherit;
+      background-color: #f8f8f8;
+      white-space: pre-line; /* 줄바꿈 적용 */
+      line-height: 1.5;
+    }
+    
+    .memo-container input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      resize: vertical;
+      min-height: auto;
+      height: 40px;
+      font-family: inherit;
+      background-color: #f8f8f8;
     }
 
+    /* 모바일 토글 버튼 */
+    .mobile-toggle-btn {
+      display: none;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 200;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+    
+    .mobile-toggle-btn:active {
+      transform: scale(0.9);
+      background-color: var(--secondary-color);
+    }
+    
+    /* 캔버스 확대 애니메이션 */
+    .canvas-container {
+      transition: all 0.3s ease;
+    }
+    
+    /* 전체화면 관련 스타일 */
+    .fullscreen-mode .canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      border-radius: 0;
+    }
+    
+    .fullscreen-mode .tools-panel,
+    .fullscreen-mode header,
+    .fullscreen-mode .action-bar {
+      display: none;
+    }
+    
+    .fullscreen-mode .exit-fullscreen {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1001;
+    }
+    
     /* 모바일 반응형 */
     @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+        margin-bottom: 5px;
+      }
+      
+      .subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+      }
+      
+      header {
+        margin-bottom: 10px;
+        position: relative;
+      }
+      
+      .mobile-toggle-btn {
+        display: flex;
+      }
+      
+      .tools-panel.collapsed {
+        display: none;
+      }
+      
       .container {
         flex-direction: column;
+        gap: 10px;
       }
       
       .tools-panel {
         flex: none;
         width: 100%;
+        padding: 15px;
+        max-height: 60vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .tool-section {
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+      }
+      
+      .drawing-tools {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      
+      .tool-btn {
+        padding: 6px;
+      }
+      
+      .tool-btn i {
+        font-size: 1.2rem;
+        margin-bottom: 2px;
+      }
+      
+      .tool-btn span {
+        font-size: 0.7rem;
+      }
+      
+      .color-option {
+        width: 25px;
+        height: 25px;
+      }
+      
+      .section-title {
+        font-size: 1rem;
+        margin-bottom: 10px;
       }
       
       .canvas-container {
-        height: 500px;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        height: auto !important;
+        max-width: 90vw;
+        margin: 0 auto 20px auto;
+      }
+      
+      #vocalCanvas {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      
+      .slider-container input[type="range"] {
+        height: 10px;
+      }
+      
+      .slider-container input[type="range"]::-webkit-slider-thumb {
+        width: 22px;
+        height: 22px;
+      }
+      
+      .action-bar {
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+      
+      .btn {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+        flex: 1 0 45%;
+        justify-content: center;
+      }
+    }
+    
+    /* 스크롤 스타일 개선 */
+    .tools-panel::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .tools-panel::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    
+    .tools-panel::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+    
+    .tools-panel::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    
+    /* PC 레이아웃 구체적 조정 */
+    @media (min-width: 992px) {
+      .container {
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+      }
+      
+      .tools-panel {
+        flex: 0 0 340px;
+        padding: 25px;
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 180px);
+        overflow-y: auto;
+      }
+      
+      .canvas-container {
+        flex: 1;
+        max-width: none;
+        height: auto;
+        min-height: 700px;
+        margin-left: 20px;
+        aspect-ratio: 1/1;
+        max-width: 800px;
+      }
+      
+      .action-bar {
+        padding: 0 20px;
+      }
+    }
+    
+    /* 작은 모바일 화면 */
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      
+      .drawing-tools {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .tool-btn {
+        padding: 10px;
+      }
+      
+      .tool-btn i {
+        font-size: 1.4rem;
+      }
+      
+      .color-picker {
+        justify-content: center;
+      }
+      
+      .canvas-container {
+        aspect-ratio: 1/1;
+        width: 100%;
+        max-width: 100%;
+      }
+      
+      .btn {
+        font-size: 0.8rem;
+        padding: 8px 10px;
+      }
+      
+      .btn i {
+        font-size: 1.2rem;
       }
     }
 
@@ -340,6 +695,9 @@
   <header>
     <h1>🎵 포더보컬: 발성 시각화 도구</h1>
     <p class="subtitle">발성 연습을 위한 시각적 가이드 에디터</p>
+    <button class="mobile-toggle-btn" id="toggle-panel-btn">
+      <i class="material-icons">menu</i>
+    </button>
   </header>
 
   <div class="container">
@@ -372,62 +730,44 @@
       <div class="tool-section">
         <div class="section-title">
           <i class="material-icons">palette</i>
-          <span>색상 및 스타일</span>
+          <span>색상</span>
         </div>
         <div class="color-picker">
           <div class="color-option active" style="background-color: #ff6b6b;" data-color="#ff6b6b"></div>
           <div class="color-option" style="background-color: #4e54c8;" data-color="#4e54c8"></div>
           <div class="color-option" style="background-color: #38d9a9;" data-color="#38d9a9"></div>
           <div class="color-option" style="background-color: #ffd43b;" data-color="#ffd43b"></div>
-          <div class="color-option" style="background-color: #ff8787;" data-color="#ff8787"></div>
-          <div class="color-option" style="background-color: #7048e8;" data-color="#7048e8"></div>
           <div class="color-option" style="background-color: #000000;" data-color="#000000"></div>
-          <div class="color-option" style="background-color: #868e96;" data-color="#868e96"></div>
-        </div>
-
-        <div class="slider-control">
-          <label>선 굵기</label>
-          <div class="slider-container">
-            <input type="range" id="line-width" min="1" max="20" value="3">
-            <span class="slider-value" id="line-width-value">3px</span>
-          </div>
         </div>
       </div>
 
       <div class="tool-section">
         <div class="section-title">
           <i class="material-icons">category</i>
-          <span>발성 요소</span>
-        </div>
-        
-        <div class="vocal-element">
-          <label for="vocal-type">발성 유형</label>
-          <select id="vocal-type">
-            <option value="default">일반</option>
-            <option value="strength">근력 방향</option>
-            <option value="sound">소리 방향</option>
-            <option value="image">이미지 방향</option>
-          </select>
+          <span>배경 이미지</span>
         </div>
 
         <div class="vocal-element">
-          <label for="background-image">배경 이미지</label>
+          <label for="background-image">배경 선택</label>
           <select id="background-image">
             <option value="none">없음</option>
-            <option value="human_vocal">인체 발성기관</option>
-            <option value="wave">음파 패턴</option>
-            <option value="notes">음표</option>
+            <option value="vocal_cords">성대 (정면도)</option>
+            <option value="facial_view">발성기관 (측면도)</option>
+            <option value="full_body_view">호흡기관 (전신도)</option>
+            <option value="human_vocal">이전 배경 (착용 예정)</option>
           </select>
         </div>
         
-        <div class="vocal-element">
-          <label for="situation-title">상황 명칭</label>
-          <input type="text" id="situation-title" placeholder="상황 명칭 입력 (예: 가성 연습 1)" />
+        <div class="memo-container">
+          <label for="situation-title">주제 입력</label>
+          <input type="text" id="situation-title" class="memo-input" placeholder="주제를 입력하세요" />
+          <small>이미지 우측 상단에 표기됩니다</small>
         </div>
 
         <div class="memo-container">
           <label for="memo">메모</label>
-          <textarea id="memo" placeholder="발성 연습 메모를 여기에 작성하세요..."></textarea>
+          <textarea id="memo" placeholder="발성 테크닉이나 관찰사항을 여기에 메모하세요.
+줄바꿈을 사용해 여러 줄로 작성할 수 있습니다."></textarea>
         </div>
       </div>
     </div>
@@ -455,6 +795,10 @@
       <i class="material-icons">save</i>
       <span>저장하기</span>
     </button>
+    <button class="btn btn-secondary" id="fullscreen-btn">
+      <i class="material-icons">fullscreen</i>
+      <span>전체화면</span>
+    </button>
   </div>
 
   <script>
@@ -465,8 +809,19 @@
     // 캔버스 크기 설정
     function resizeCanvas() {
       const container = document.querySelector('.canvas-container');
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      
+      // 캔버스 디스플레이 크기 설정
+      canvas.style.width = container.clientWidth + 'px';
+      canvas.style.height = container.clientHeight + 'px';
+      
+      // 캔버스 버퍼 크기 설정 (더 선명한 화질을 위해)
+      canvas.width = container.clientWidth * devicePixelRatio;
+      canvas.height = container.clientHeight * devicePixelRatio;
+      
+      // 컨텍스트 스케일 조정
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      
       redrawCanvas();
     }
 
@@ -474,8 +829,9 @@
     const backgroundImages = {
       none: null,
       human_vocal: 'human_vocal.png', 
-      wave: 'human_vocal.png', // 추후 wave_pattern.png로 변경
-      notes: 'human_vocal.png' // 추후 music_notes.png로 변경
+      vocal_cords: 'vocal cords.png',
+      facial_view: 'Vocal Anatomy – Facial View.png',
+      full_body_view: 'Vocal Anatomy – Full-body View.png'
     };
     
     // 배경 이미지 객체
@@ -485,14 +841,63 @@
     let isDrawing = false;
     let currentTool = 'pencil-tool';
     let currentColor = '#ff6b6b';
-    let currentLineWidth = 3;
-    let currentVocalType = 'default';
+    let currentLineWidth = 1; // 고정 1px 선 굵기 사용
     let currentBackground = 'none';
     let currentSituation = '';
     let startX, startY;
     let points = []; // 곡선을 위한 점들
     let drawingHistory = [];
     let currentDrawingState = null;
+    
+    // 전체화면 모드 토글
+    let isFullscreen = false;
+    
+    function toggleFullscreen() {
+      const body = document.body;
+      
+      if (!isFullscreen) {
+        // 전체화면 모드 켜기
+        body.classList.add('fullscreen-mode');
+        
+        // 전체화면 나가기 버튼 추가
+        const exitBtn = document.createElement('button');
+        exitBtn.className = 'exit-fullscreen';
+        exitBtn.innerHTML = '<i class="material-icons">fullscreen_exit</i>';
+        exitBtn.addEventListener('click', toggleFullscreen);
+        document.body.appendChild(exitBtn);
+        
+        isFullscreen = true;
+      } else {
+        // 전체화면 모드 끄기
+        body.classList.remove('fullscreen-mode');
+        
+        // 전체화면 나가기 버튼 제거
+        const exitBtn = document.querySelector('.exit-fullscreen');
+        if (exitBtn) exitBtn.remove();
+        
+        isFullscreen = false;
+      }
+      
+      // 캔버스 크기 다시 계산
+      setTimeout(resizeCanvas, 100);
+    }
+    
+    // 모바일에서 도구 패널 토글
+    function toggleToolsPanel() {
+      const toolsPanel = document.querySelector('.tools-panel');
+      const toggleBtn = document.getElementById('toggle-panel-btn');
+      toolsPanel.classList.toggle('collapsed');
+      
+      // 아이콘 변경
+      if (toolsPanel.classList.contains('collapsed')) {
+        toggleBtn.querySelector('i').textContent = 'menu';
+      } else {
+        toggleBtn.querySelector('i').textContent = 'close';
+      }
+      
+      // 토글 후 캔버스 크기 다시 계산
+      setTimeout(resizeCanvas, 100);
+    }
     
     // 초기화 함수
     function init() {
@@ -516,27 +921,19 @@
         });
       });
       
-      // 선 굵기 이벤트 리스너
-      const lineWidthSlider = document.getElementById('line-width');
-      const lineWidthValue = document.getElementById('line-width-value');
-      
-      lineWidthSlider.addEventListener('input', function() {
-        currentLineWidth = this.value;
-        lineWidthValue.textContent = `${this.value}px`;
-      });
-      
-      // 발성 유형 이벤트 리스너
-      document.getElementById('vocal-type').addEventListener('change', function() {
-        currentVocalType = this.value;
-      });
-      
+    // 선 굵기 이벤트 리스너 제거 (고정 1px 사용)
       // 배경 이미지 이벤트 리스너
       document.getElementById('background-image').addEventListener('change', function() {
         currentBackground = this.value;
         if (backgroundImages[currentBackground]) {
+          console.log('배경 이미지 로드 시도:', backgroundImages[currentBackground]);
           bgImg.src = backgroundImages[currentBackground];
           bgImg.onload = function() {
+            console.log('이미지 로드 완료');
             redrawCanvas();
+          };
+          bgImg.onerror = function() {
+            console.error('이미지 로드 실패:', backgroundImages[currentBackground]);
           };
         } else {
           redrawCanvas();
@@ -554,6 +951,8 @@
       document.getElementById('undo-btn').addEventListener('click', undoLastAction);
       document.getElementById('save-btn').addEventListener('click', saveCanvas);
       document.getElementById('download-img-btn').addEventListener('click', downloadCanvasImage);
+      document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
+      document.getElementById('toggle-panel-btn').addEventListener('click', toggleToolsPanel);
       
       // 캔버스 이벤트 리스너
       canvas.addEventListener('mousedown', handleMouseDown);
@@ -562,9 +961,17 @@
       canvas.addEventListener('mouseout', handleMouseOut);
       
       // 터치 이벤트 지원
-      canvas.addEventListener('touchstart', handleTouchStart);
-      canvas.addEventListener('touchmove', handleTouchMove);
-      canvas.addEventListener('touchend', handleTouchEnd);
+      canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+      canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+      canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+      
+      // 핀치 줌 방지 (iOS Safari)
+      document.addEventListener('gesturestart', function(e) {
+        if (e.cancelable) e.preventDefault();
+      }, { passive: false });
+      document.addEventListener('gesturechange', function(e) {
+        if (e.cancelable) e.preventDefault();
+      }, { passive: false });
       
       // 윈도우 리사이즈 이벤트
       window.addEventListener('resize', resizeCanvas);
@@ -621,7 +1028,7 @@
     
     // 상태에서 그리기
     function drawFromState(state) {
-      const { type, color, lineWidth, vocalType, points, memo } = state;
+      const { type, color, lineWidth, points, memo } = state;
       
       // 흰색 테두리를 위한 설정
       function drawWithWhiteOutline(drawFunction) {
@@ -697,91 +1104,17 @@
         ctx.font = 'bold 14px Noto Sans KR';
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 2;
-        ctx.strokeText(memo, lastPoint.x + 10, lastPoint.y + 10);
-        ctx.fillStyle = '#000';
-        ctx.fillText(memo, lastPoint.x + 10, lastPoint.y + 10);
+        
+        // 줄바꿈을 처리하기 위한 메모 분리
+        const lines = memo.split('\n');
+        let lineHeight = 18; // 줄 높이
+        
+        lines.forEach((line, index) => {
+          ctx.strokeText(line, lastPoint.x + 10, lastPoint.y + 10 + (index * lineHeight));
+          ctx.fillStyle = '#000';
+          ctx.fillText(line, lastPoint.x + 10, lastPoint.y + 10 + (index * lineHeight));
+        });
       }
-      
-      // 발성 유형 마커 그리기
-      if (vocalType !== 'default') {
-        drawVocalTypeMarker(points[points.length - 1].x, points[points.length - 1].y, vocalType);
-      }
-    }
-    
-    // 발성 유형 마커 그리기
-    function drawVocalTypeMarker(x, y, type) {
-      ctx.save();
-      
-      switch (type) {
-        case 'strength':
-          // 근력 방향 - 삼각형 모양
-          // 흰색 테두리 그리기
-          ctx.beginPath();
-          ctx.moveTo(x + 15, y);
-          ctx.lineTo(x, y - 10);
-          ctx.lineTo(x, y + 10);
-          ctx.closePath();
-          ctx.strokeStyle = 'white';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          
-          // 실제 색상 그리기
-          ctx.fillStyle = '#ff6b6b';
-          ctx.fill();
-          break;
-          
-        case 'sound':
-          // 소리 방향 - 원 모양
-          // 흰색 테두리 그리기
-          ctx.beginPath();
-          ctx.arc(x + 15, y, 8, 0, Math.PI * 2);
-          ctx.strokeStyle = 'white';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          
-          // 실제 색상 그리기
-          ctx.fillStyle = '#4e54c8';
-          ctx.fill();
-          break;
-          
-        case 'image':
-          // 이미지 방향 - 별 모양
-          const spikes = 5;
-          const outerRadius = 10;
-          const innerRadius = 5;
-          
-          // 흰색 테두리 그리기
-          ctx.beginPath();
-          for (let i = 0; i < spikes * 2; i++) {
-            const radius = i % 2 === 0 ? outerRadius + 2 : innerRadius + 2;
-            const angle = Math.PI / spikes * i;
-            ctx.lineTo(
-              x + 15 + Math.cos(angle) * radius,
-              y + Math.sin(angle) * radius
-            );
-          }
-          ctx.closePath();
-          ctx.strokeStyle = 'white';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          
-          // 실제 색상 그리기
-          ctx.beginPath();
-          for (let i = 0; i < spikes * 2; i++) {
-            const radius = i % 2 === 0 ? outerRadius : innerRadius;
-            const angle = Math.PI / spikes * i;
-            ctx.lineTo(
-              x + 15 + Math.cos(angle) * radius,
-              y + Math.sin(angle) * radius
-            );
-          }
-          ctx.closePath();
-          ctx.fillStyle = '#38d9a9';
-          ctx.fill();
-          break;
-      }
-      
-      ctx.restore();
     }
     
     // 화살표 그리기 - 테두리 없음
@@ -871,6 +1204,9 @@
     
     // 마우스 이벤트 핸들러
     function handleMouseDown(e) {
+      // 터치 이벤트인지 확인 (터치 기기에서는 마우스 이벤트도 동시에 발생할 수 있음)
+      if (e.type === 'touchstart') return;
+      
       isDrawing = true;
       startX = e.offsetX;
       startY = e.offsetY;
@@ -883,7 +1219,6 @@
         type: currentTool,
         color: currentColor,
         lineWidth: currentLineWidth,
-        vocalType: currentVocalType,
         points: points,
         memo: document.getElementById('memo').value
       };
@@ -1026,9 +1361,13 @@
     
     // 터치 이벤트 핸들러
     function handleTouchStart(e) {
-      e.preventDefault();
+      if (e.cancelable) {
+        e.preventDefault();
+      }
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
+      
+      // 스크롤 위치 고려한 좌표 계산 (모바일에서 정확도 향상)
       const x = touch.clientX - rect.left;
       const y = touch.clientY - rect.top;
       
@@ -1043,7 +1382,6 @@
         type: currentTool,
         color: currentColor,
         lineWidth: currentLineWidth,
-        vocalType: currentVocalType,
         points: points,
         memo: document.getElementById('memo').value
       };
@@ -1059,12 +1397,16 @@
     }
     
     function handleTouchMove(e) {
-      e.preventDefault();
+      if (e.cancelable) {
+        e.preventDefault();
+      }
       
       if (!isDrawing) return;
       
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
+      
+      // 스크롤 위치 고려한 좌표 계산 (모바일에서 정확도 향상)
       const x = touch.clientX - rect.left;
       const y = touch.clientY - rect.top;
       
@@ -1159,7 +1501,9 @@
     }
     
     function handleTouchEnd(e) {
-      e.preventDefault();
+      if (e.cancelable) {
+        e.preventDefault();
+      }
       
       if (!isDrawing) return;
       
@@ -1196,12 +1540,22 @@
     
     // 캔버스 저장
     function saveCanvas() {
-      const dataUrl = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      
-      link.href = dataUrl;
-      link.download = `포더보컬_${new Date().toISOString().slice(0, 10)}.png`;
-      link.click();
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        
+        link.href = dataUrl;
+        link.download = `포더보컬_${new Date().toISOString().slice(0, 10)}.png`;
+        link.click();
+        
+        // 모바일에서 저장 확인 메시지
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+          alert('이미지가 저장되었습니다. 다운로드 폴더를 확인하세요.');
+        }
+      } catch (err) {
+        alert('이미지 저장 중 오류가 발생했습니다: ' + err.message);
+      }
     }
     
     // 이미지만 다운로드
@@ -1231,8 +1585,8 @@
         
         tempCtx.drawImage(bgImg, offsetX, offsetY, drawWidth, drawHeight);
       } else {
-        // 배경이 없으면 흰색 배경
-        tempCtx.fillStyle = 'white';
+        // 배경이 없으면 연한 그레이 배경
+        tempCtx.fillStyle = '#f8f8f8';
         tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
       }
       
