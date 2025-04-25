@@ -1,0 +1,199 @@
+/* 툴 패널 스타일 */
+.tools-panel {
+  flex: 0 0 300px;
+  background: var(--panel-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tool-section {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.tool-section:last-child {
+  border-bottom: none;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title i {
+  font-size: 1.4rem;
+}
+
+/* 그리기 도구 버튼 */
+.drawing-tools {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.tool-btn {
+  padding: 8px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #f0f0f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.tool-btn i {
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+}
+
+.tool-btn:hover {
+  background: #e8e8e8;
+}
+
+.tool-btn.active {
+  border-color: var(--primary-color);
+  background: rgba(78, 84, 200, 0.1);
+}
+
+/* 색상 선택 */
+.color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.color-option {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #eee;
+  transition: transform 0.2s;
+}
+
+.color-option:hover {
+  transform: scale(1.15);
+}
+
+.color-option.active {
+  border: 2px solid #333;
+  transform: scale(1.15);
+}
+
+/* 슬라이더 컨트롤 */
+.slider-control {
+  margin: 15px 0;
+}
+
+.slider-control label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.slider-container input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: #ddd;
+  outline: none;
+}
+
+.slider-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+}
+
+.slider-value {
+  font-weight: 500;
+  min-width: 30px;
+  text-align: center;
+}
+
+/* 셀렉트 및 인풋 요소 */
+select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+small {
+  display: block;
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 3px;
+  margin-bottom: 8px;
+}
+
+.vocal-element {
+  margin-top: 10px;
+}
+
+.vocal-element label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+/* 메모 컨테이너 */
+.memo-container {
+  margin-top: 10px;
+}
+
+.memo-container label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.memo-container textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  background-color: #f8f8f8;
+  white-space: pre-line; /* 줄바꿈 적용 */
+  line-height: 1.5;
+}
+
+.memo-container input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  resize: vertical;
+  min-height: auto;
+  height: 40px;
+  font-family: inherit;
+  background-color: #f8f8f8;
+}
